@@ -1,0 +1,106 @@
+<div class="login-page">
+  <div class="login-left">
+    <div class="login-branding">
+      <div class="brand-logo">
+        <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="8" fill="#4f46e5"/>
+          <path d="M8 10h4v2H8v-2zm0 6h4v2H8v-2zm8-6h4v2h-4v-2zm0 6h4v2h-4v-2zm-4 0h4v-6h-4v6z" fill="white" opacity="0.9"/>
+        </svg>
+      </div>
+      <h1>Flowlet</h1>
+      <p>{{ 'Visual automation made simple' | t }}</p>
+    </div>
+
+    <div class="login-features">
+      <div class="feature">
+        <span class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
+        </span>
+        <div>
+          <strong>{{ 'Drag & Drop Builder' | t }}</strong>
+          <span>{{ 'Create automations visually with intuitive blocks' | t }}</span>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z"/></svg>
+        </span>
+        <div>
+          <strong>{{ 'Smart Connections' | t }}</strong>
+          <span>{{ 'Link triggers, conditions, actions & notifications' | t }}</span>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/></svg>
+        </span>
+        <div>
+          <strong>{{ 'Execution History' | t }}</strong>
+          <span>{{ 'Track every run with detailed logs and status' | t }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-card">
+      <div class="login-header">
+        <h2>{{ 'Welcome back' | t }}</h2>
+        <p>{{ 'Sign in to your account to continue' | t }}</p>
+      </div>
+
+      @if (error()) {
+        <div class="login-error">{{ error() }}</div>
+      }
+
+      <form (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-group">
+          <label for="email">{{ 'Email' | t }}</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="you@company.com"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            name="email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">{{ 'Password' | t }}</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="Enter your password"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            name="password"
+            required
+          />
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input type="checkbox" checked />
+            <span>{{ 'Remember me' | t }}</span>
+          </label>
+          <a href="#" class="forgot-link">{{ 'Forgot password?' | t }}</a>
+        </div>
+
+        <button type="submit" class="btn-login" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner"></span>
+            {{ 'Signing in...' | t }}
+          } @else {
+            {{ 'Sign in' | t }}
+          }
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p>{{ "Don't have an account?" | t }} <a href="#">{{ 'Start free trial' | t }}</a></p>
+      </div>
+    </div>
+  </div>
+</div>

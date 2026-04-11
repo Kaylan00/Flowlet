@@ -1,0 +1,176 @@
+<div class="page-container" (click)="closeMenus()">
+  <div class="page-header">
+    <div class="header-row">
+      <div>
+        <h1>{{ 'Dashboard' | t }}</h1>
+        <p>{{ 'Overview of your automation flows' | t }}</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" (click)="showTemplates.set(!showTemplates())">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg>
+          {{ 'Templates' | t }}
+        </button>
+        <button class="btn-create" (click)="createBlankFlow()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 010-2h4V3a1 1 0 011-1z"/></svg>
+          {{ 'New Flow' | t }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates Panel -->
+  @if (showTemplates()) {
+    <div class="templates-panel">
+      <div class="templates-header">
+        <h2>{{ 'Create from Template' | t }}</h2>
+        <button class="btn-close" (click)="showTemplates.set(false)">
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor"><path d="M4.05 3.05a.75.75 0 00-1.06 1.06L5.94 7l-2.95 2.89a.75.75 0 101.06 1.06L7 8.06l2.89 2.89a.75.75 0 101.06-1.06L8.06 7l2.89-2.89a.75.75 0 00-1.06-1.06L7 5.94 4.05 3.05z"/></svg>
+        </button>
+      </div>
+      <div class="templates-grid">
+        @for (tpl of templates; track tpl.id) {
+          <button class="template-card" (click)="createFromTemplate(tpl)">
+            <span class="template-icon"><block-icon [name]="tpl.icon" [size]="22"/></span>
+            <span class="template-name">{{ tpl.name | t }}</span>
+            <span class="template-desc">{{ tpl.description | t }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ stats().totalFlows }}</span>
+        <span class="stat-label">{{ 'Total Flows' | t }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ stats().activeFlows }}</span>
+        <span class="stat-label">{{ 'Active Flows' | t }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-purple">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/></svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ stats().totalExecutions }}</span>
+        <span class="stat-label">{{ 'Total Executions' | t }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-amber">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"/></svg>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value">{{ stats().successRate }}%</span>
+        <span class="stat-label">{{ 'Success Rate' | t }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Flows List -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2>{{ 'Your Flows' | t }}</h2>
+        <span class="section-count">{{ flows().length }}</span>
+      </div>
+      @if (flows().length === 0) {
+        <div class="empty-section">
+          <p>{{ 'No flows yet. Create one to get started!' | t }}</p>
+        </div>
+      }
+      <div class="flows-list">
+        @for (flow of flows(); track flow.id) {
+          <div class="flow-item" (click)="openFlow(flow.id)">
+            <div class="flow-info">
+              <div class="flow-name-row">
+                <span class="flow-name">{{ flow.name }}</span>
+                <span class="flow-badge" [class]="getStatusClass(flow.status)">{{ flow.status | t }}</span>
+              </div>
+              <div class="flow-desc">{{ flow.description || ('No description' | t) }}</div>
+              <div class="flow-meta-row">
+                <span>{{ flow.blocks.length }} {{ 'blocks' | t }}</span>
+                <span>{{ flow.executionCount }} {{ 'runs' | t }}</span>
+                <span>{{ 'Updated' | t }} {{ formatDate(flow.updatedAt) }}</span>
+              </div>
+            </div>
+            <div class="flow-actions">
+              <button
+                class="btn-toggle"
+                [class.active]="flow.status === 'active'"
+                (click)="toggleFlowStatus(flow, $event)"
+                [title]="flow.status === 'active' ? ('Deactivate' | t) : ('Activate' | t)"
+              >
+                <div class="toggle-track">
+                  <div class="toggle-thumb"></div>
+                </div>
+              </button>
+              <div class="menu-wrapper">
+                <button class="btn-menu" (click)="toggleMenu(flow.id, $event)">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/></svg>
+                </button>
+                @if (showFlowMenu() === flow.id) {
+                  <div class="dropdown-menu">
+                    <button (click)="openFlow(flow.id)">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M12.854 3.146a.5.5 0 010 .708l-8 8a.5.5 0 01-.708-.708l8-8a.5.5 0 01.708 0z"/><path d="M11 3.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v2a.5.5 0 01-1 0V4h-1.5a.5.5 0 01-.5-.5z"/></svg>
+                      {{ 'Edit' | t }}
+                    </button>
+                    <button (click)="duplicateFlow(flow, $event)">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V2zm2 8a2 2 0 00-2 2v2a2 2 0 002 2h6a2 2 0 002-2v-2a2 2 0 00-2-2H6z"/></svg>
+                      {{ 'Duplicate' | t }}
+                    </button>
+                    <div class="menu-divider"></div>
+                    <button class="menu-danger" (click)="deleteFlow(flow, $event)">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 010-2H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1z"/></svg>
+                      {{ 'Delete' | t }}
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Recent Executions -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2>{{ 'Recent Executions' | t }}</h2>
+        <a class="section-link" routerLink="/history">{{ 'View all' | t }}</a>
+      </div>
+      @if (recentExecutions().length === 0) {
+        <div class="empty-section">
+          <p>{{ 'No executions yet. Run a flow to see results here.' | t }}</p>
+        </div>
+      }
+      <div class="exec-list">
+        @for (exec of recentExecutions(); track exec.id) {
+          <div class="exec-item">
+            <div class="exec-status-dot" [class]="getStatusClass(exec.status)"></div>
+            <div class="exec-info">
+              <div class="exec-name">{{ exec.flowName }}</div>
+              <div class="exec-time">{{ formatDate(exec.startedAt) }}</div>
+            </div>
+            <div class="exec-meta">
+              <span class="exec-duration">{{ formatDuration(exec.duration) }}</span>
+              <span class="exec-steps">{{ exec.stepsCompleted }}/{{ exec.totalSteps }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</div>

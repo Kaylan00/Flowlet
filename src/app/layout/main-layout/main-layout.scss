@@ -1,0 +1,18 @@
+@use 'styles/variables' as *;
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: $sidebar-width;
+  min-height: 100vh;
+  background: var(--bg-secondary);
+  transition: margin-left $transition-slow;
+
+  @media (max-width: 768px) {
+    margin-left: $sidebar-collapsed;
+  }
+}

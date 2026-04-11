@@ -1,0 +1,96 @@
+@use 'variables' as *;
+
+@mixin card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  transition: box-shadow $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+@mixin button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: $primary;
+  color: white;
+  border: none;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $primary-dark;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($primary, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@mixin button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--text-tertiary);
+  }
+}
+
+@mixin badge($bg, $color) {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: $bg;
+  color: $color;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin responsive($breakpoint) {
+  @if $breakpoint == sm {
+    @media (max-width: 640px) { @content; }
+  } @else if $breakpoint == md {
+    @media (max-width: 768px) { @content; }
+  } @else if $breakpoint == lg {
+    @media (max-width: 1024px) { @content; }
+  } @else if $breakpoint == xl {
+    @media (max-width: 1280px) { @content; }
+  }
+}

@@ -1,0 +1,136 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>{{ 'Execution History' | t }}</h1>
+    <p>{{ 'Track and monitor your flow executions' | t }}</p>
+  </div>
+
+  <!-- Filter chips -->
+  <div class="stats-bar">
+    <button class="stat-chip" [class.active]="filter() === 'all'" (click)="setFilter('all')">
+      {{ 'All' | t }} <span class="chip-count">{{ stats().total }}</span>
+    </button>
+    <button class="stat-chip chip-success" [class.active]="filter() === 'success'" (click)="setFilter('success')">
+      {{ 'Success' | t }} <span class="chip-count">{{ stats().success }}</span>
+    </button>
+    <button class="stat-chip chip-failed" [class.active]="filter() === 'failed'" (click)="setFilter('failed')">
+      {{ 'Failed' | t }} <span class="chip-count">{{ stats().failed }}</span>
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <div class="th-status">{{ 'Status' | t }}</div>
+      <div class="th-flow">{{ 'Flow' | t }}</div>
+      <div class="th-time">{{ 'Started' | t }}</div>
+      <div class="th-duration">{{ 'Duration' | t }}</div>
+      <div class="th-steps">{{ 'Steps' | t }}</div>
+      <div class="th-actions"></div>
+    </div>
+
+    @for (exec of executions(); track exec.id) {
+      <div class="table-row" [class.expanded]="expandedId() === exec.id">
+        <div class="row-main" (click)="toggleExpand(exec)">
+          <div class="td-status">
+            <span class="status-indicator" [class]="'si-' + exec.status">
+              @if (exec.status === 'success') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 16A8 8 0 108 0a8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L7 8.586 5.707 7.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+              } @else if (exec.status === 'failed') {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 16A8 8 0 108 0a8 8 0 000 16zM6.707 5.293a1 1 0 00-1.414 1.414L6.586 8 5.293 9.293a1 1 0 101.414 1.414L8 9.414l1.293 1.293a1 1 0 001.414-1.414L9.414 8l1.293-1.293a1 1 0 00-1.414-1.414L8 6.586 6.707 5.293z"/></svg>
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="running-icon"><path fill-rule="evenodd" d="M8 16A8 8 0 108 0a8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L9 7.586V4z"/></svg>
+              }
+            </span>
+          </div>
+          <div class="td-flow">
+            <span class="flow-name">{{ exec.flowName }}</span>
+            <span class="flow-id">{{ exec.id }}</span>
+          </div>
+          <div class="td-time">{{ formatShortDate(exec.startedAt) }}</div>
+          <div class="td-duration">{{ formatDuration(exec.duration) }}</div>
+          <div class="td-steps">
+            <div class="progress-bar">
+              <div class="progress-fill" [class]="'fill-' + exec.status" [style.width.%]="getProgressPercent(exec)"></div>
+            </div>
+            <span class="steps-text">{{ exec.stepsCompleted }}/{{ exec.totalSteps }}</span>
+          </div>
+          <div class="td-actions">
+            @if (exec.status === 'failed') {
+              <button class="btn-retry" (click)="retryExecution(exec, $event)" title="Retry">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 104.546 2.914.5.5 0 01.908-.418A6 6 0 118 2v1z"/><path d="M8 4.466V.534a.25.25 0 01.41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 018 4.466z"/></svg>
+              </button>
+            }
+            <button class="btn-open-flow" (click)="openFlow(exec.flowId, $event)" title="Open flow">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M12.854 3.146a.5.5 0 010 .708l-8 8a.5.5 0 01-.708-.708l8-8a.5.5 0 01.708 0z"/><path d="M11 3.5a.5.5 0 01.5-.5h2a.5.5 0 01.5.5v2a.5.5 0 01-1 0V4h-1.5a.5.5 0 01-.5-.5z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Expanded details -->
+        @if (expandedId() === exec.id) {
+          <div class="row-detail">
+            <!-- Info grid -->
+            <div class="detail-info">
+              <div class="detail-item">
+                <span class="detail-label">{{ 'Execution ID' | t }}</span>
+                <span class="detail-value mono">{{ exec.id }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">{{ 'Flow ID' | t }}</span>
+                <span class="detail-value mono">{{ exec.flowId }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">{{ 'Started' | t }}</span>
+                <span class="detail-value">{{ formatDate(exec.startedAt) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">{{ 'Completed' | t }}</span>
+                <span class="detail-value">{{ exec.completedAt ? formatDate(exec.completedAt) : ('In progress' | t) }}</span>
+              </div>
+              @if (exec.error) {
+                <div class="detail-item detail-full">
+                  <span class="detail-label">{{ 'Error' | t }}</span>
+                  <span class="detail-value error-text">{{ exec.error }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Step logs -->
+            @if (exec.logs && exec.logs.length > 0) {
+              <div class="logs-section">
+                <h4>{{ 'Execution Logs' | t }}</h4>
+                <div class="logs-timeline">
+                  @for (log of exec.logs; track log.blockId; let i = $index; let last = $last) {
+                    <div class="log-entry" [class]="'log-' + log.status">
+                      <div class="log-connector">
+                        <div class="log-dot" [style.background]="getBlockColor(log.blockCategory)"></div>
+                        @if (!last) {
+                          <div class="log-line"></div>
+                        }
+                      </div>
+                      <div class="log-content">
+                        <div class="log-header">
+                          <span class="log-step">{{ 'Step' | t }} {{ i + 1 }}</span>
+                          <span class="log-block-name">{{ log.blockLabel }}</span>
+                          <span class="log-badge" [class]="'badge-' + log.status">{{ log.status | t }}</span>
+                          <span class="log-duration">{{ formatDuration(log.duration) }}</span>
+                        </div>
+                        <div class="log-message">{{ log.message }}</div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (executions().length === 0) {
+      <div class="table-empty">
+        <p>{{ 'No executions match this filter' | t }}</p>
+      </div>
+    }
+  </div>
+</div>

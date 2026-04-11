@@ -1,0 +1,232 @@
+<div class="editor-container">
+  <!-- Toolbar -->
+  <div class="editor-toolbar">
+    <div class="toolbar-left">
+      <button class="btn-icon" (click)="goBack()" [title]="'Back' | t">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L4.414 8l5.293 5.293a1 1 0 010 1.414z"/></svg>
+      </button>
+      @if (flow()) {
+        <input class="title-input" [value]="flow()!.name" (input)="updateFlowName($any($event.target).value)" placeholder="Flow name..." />
+      }
+      <div class="save-status">
+        @if (hasUnsavedChanges()) {
+          <span class="unsaved">{{ 'Unsaved' | t }}</span>
+        } @else if (lastSaved()) {
+          <span class="saved">{{ 'Saved' | t }} {{ lastSaved() }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="toolbar-center">
+      <!-- Zoom controls -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" (click)="zoomOut()" title="Zoom out">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 8a.75.75 0 01.75-.75h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 014 8z"/></svg>
+        </button>
+        <button class="zoom-label" (click)="zoomReset()" title="Reset zoom">{{ zoomPercent() }}%</button>
+        <button class="zoom-btn" (click)="zoomIn()" title="Zoom in">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/></svg>
+        </button>
+        <button class="zoom-btn" (click)="fitToView()" title="Fit to view">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M2 2.5A1.5 1.5 0 013.5 1h2a.75.75 0 010 1.5h-2a.25.25 0 00-.25.25v2a.75.75 0 01-1.5 0v-2zm8.75-.75a.75.75 0 01.75-.75h2A1.5 1.5 0 0115 2.5v2a.75.75 0 01-1.5 0v-2a.25.25 0 00-.25-.25h-2a.75.75 0 01-.75-.75zM2 10.75a.75.75 0 011.5 0v2c0 .138.112.25.25.25h2a.75.75 0 010 1.5h-2A1.5 1.5 0 012 13.5v-2.75zm11.5 0a.75.75 0 011.5 0v2.75a1.5 1.5 0 01-1.5 1.5h-2a.75.75 0 010-1.5h2a.25.25 0 00.25-.25v-2.75z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <button class="btn-icon" [class.active]="showBlockPicker()" (click)="showBlockPicker.set(!showBlockPicker())" [title]="'Toggle block panel' | t">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 010-2h4V3a1 1 0 011-1z"/></svg>
+      </button>
+      <div class="toolbar-info">
+        <span>{{ blockCount() }} {{ 'blocks' | t }}</span>
+        <span>{{ connectionCount() }} {{ 'links' | t }}</span>
+      </div>
+      <button class="btn-run" (click)="runFlow()" [disabled]="running() || blockCount() === 0" title="Ctrl+Enter">
+        @if (running()) {
+          <span class="spinner-sm"></span>
+          {{ 'Running...' | t }}
+        } @else {
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2l10 6-10 6V2z"/></svg>
+          {{ 'Run' | t }}
+        }
+      </button>
+      <button class="btn-save" (click)="saveFlow()" title="Ctrl+S">{{ 'Save' | t }}</button>
+    </div>
+  </div>
+
+  <div class="editor-body">
+    <!-- Block Picker Panel (left) -->
+    @if (showBlockPicker()) {
+      <div class="block-picker">
+        <div class="picker-header">
+          <h3>{{ 'Blocks' | t }}</h3>
+          <span class="picker-hint">{{ 'Click to add & auto-connect' | t }}</span>
+        </div>
+        <div class="picker-search">
+          <input type="text" [value]="pickerSearch()" (input)="pickerSearch.set($any($event.target).value)" [placeholder]="'Search blocks...' | t" class="search-input" />
+        </div>
+        <div class="picker-categories">
+          <button class="cat-chip" [class.active]="pickerCategory() === 'all'" (click)="pickerCategory.set('all')">{{ 'All' | t }}</button>
+          @for (cat of categories; track cat.id) {
+            <button class="cat-chip" [class.active]="pickerCategory() === cat.id" [style.--cat-color]="cat.color" (click)="pickerCategory.set(cat.id)">
+              {{ cat.label | t }}
+            </button>
+          }
+        </div>
+        <div class="picker-list">
+          @for (def of filteredBlocks(); track def.id) {
+            <button class="picker-block" (click)="addBlockFromDef(def)" [style.--block-color]="def.color">
+              <div class="picker-block-icon"><block-icon [name]="def.icon" [size]="18"/></div>
+              <div class="picker-block-info">
+                <span class="picker-block-name">{{ def.name | t }}</span>
+                <span class="picker-block-desc">{{ def.description | t }}</span>
+              </div>
+              <svg class="picker-add-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 010-2h4V3a1 1 0 011-1z"/></svg>
+            </button>
+          }
+          @if (filteredBlocks().length === 0) {
+            <div class="picker-empty">{{ 'No blocks match your search' | t }}</div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Canvas -->
+    <div
+      class="editor-canvas"
+      [class.connecting-mode]="connectingFrom()"
+      [class.panning]="panning"
+      (mousedown)="onCanvasMouseDown($event); deselectAll()"
+      (mousemove)="onCanvasMouseMove($event)"
+      (mouseup)="onCanvasMouseUp()"
+      (contextmenu)="onCanvasContextMenu($event)"
+      (wheel)="onCanvasWheel($event)"
+    >
+      <div class="canvas-inner"
+        [style.transform]="'scale(' + zoom() + ') translate(' + panX() + 'px, ' + panY() + 'px)'"
+      >
+        @if (blockCount() === 0) {
+          <div class="canvas-empty">
+            <div class="empty-icon">
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+                <rect x="4" y="4" width="48" height="48" rx="14" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" opacity="0.25"/>
+                <path d="M28 18v20m-10-10h20" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+              </svg>
+            </div>
+            <h3>{{ 'Start building your flow' | t }}</h3>
+            <p>{{ 'Pick blocks from the left panel — they auto-connect!' | t }}</p>
+            <div class="empty-shortcuts">
+              <span>{{ 'Drag canvas to pan' | t }}</span>
+              <span>{{ 'Scroll to zoom' | t }}</span>
+              <span><kbd>Ctrl</kbd>+<kbd>S</kbd> {{ 'Save' | t }}</span>
+              <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> {{ 'Run' | t }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Connections SVG -->
+        <svg class="connections-layer">
+          @for (conn of flow()?.connections || []; track conn.id) {
+            <g class="connection-group">
+              <path [attr.d]="getConnectionPath(conn)" class="connection-line-hit" (click)="removeConnection(conn.id, $event)"/>
+              <path [attr.d]="getConnectionPath(conn)" class="connection-line" />
+              <!-- Animated flow dot -->
+              <circle r="3" fill="var(--text-tertiary)" opacity="0.5">
+                <animateMotion [attr.path]="getConnectionPath(conn)" dur="2s" repeatCount="indefinite"/>
+              </circle>
+            </g>
+          }
+        </svg>
+
+        <!-- Blocks -->
+        @for (block of flow()?.blocks || []; track block.id) {
+          <div
+            class="flow-block"
+            [class.selected]="selectedBlock()?.id === block.id"
+            [class.connecting-source]="connectingFrom() === block.id"
+            [class.connecting-target]="connectingFrom() && connectingFrom() !== block.id"
+            [class.running-block]="runningBlockId() === block.id"
+            [style.left.px]="block.position.x"
+            [style.top.px]="block.position.y"
+            [style.--block-color]="block.color"
+            (mousedown)="onBlockMouseDown(block, $event)"
+          >
+            <div class="block-color-bar"></div>
+            <div class="block-header">
+              <span class="block-type-icon"><block-icon [name]="block.icon" [size]="16"/></span>
+              <span class="block-label">{{ block.label }}</span>
+              <div class="block-actions">
+                <button class="block-action-btn" (click)="duplicateBlock(block); $event.stopPropagation()" [title]="'Duplicate' | t">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V2zm2 8a2 2 0 00-2 2v2a2 2 0 002 2h6a2 2 0 002-2v-2a2 2 0 00-2-2H6z"/></svg>
+                </button>
+                <button class="block-action-btn btn-delete" (click)="deleteBlock(block.id); $event.stopPropagation()" [title]="'Delete' | t">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3.05 3.05a.75.75 0 011.06 0L6 4.94l1.89-1.89a.75.75 0 111.06 1.06L7.06 6l1.89 1.89a.75.75 0 01-1.06 1.06L6 7.06 4.11 8.95a.75.75 0 01-1.06-1.06L4.94 6 3.05 4.11a.75.75 0 010-1.06z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="block-type-label">{{ block.definitionId }}</div>
+
+            <!-- Ports -->
+            <div class="port port-in" (mousedown)="$event.stopPropagation()" (click)="completeConnection(block.id); $event.stopPropagation()"></div>
+            <div class="port port-out" (mousedown)="startConnection(block.id, $event)"></div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Properties Panel (right) -->
+    @if (selectedBlock()) {
+      <div class="properties-panel">
+        <div class="panel-header">
+          <h3><span class="panel-icon"><block-icon [name]="selectedBlock()!.icon" [size]="18"/></span> {{ 'Properties' | t }}</h3>
+          <button class="btn-icon-sm" (click)="selectedBlock.set(null)">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M4.05 3.05a.75.75 0 00-1.06 1.06L5.94 7l-2.95 2.89a.75.75 0 101.06 1.06L7 8.06l2.89 2.89a.75.75 0 101.06-1.06L8.06 7l2.89-2.89a.75.75 0 00-1.06-1.06L7 5.94 4.05 3.05z"/></svg>
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="prop-group">
+            <label>{{ 'Label' | t }}</label>
+            <input [value]="selectedBlock()!.label" (input)="updateBlockLabel($any($event.target).value)" class="prop-input" />
+          </div>
+          <div class="prop-group">
+            <label>{{ 'Block Type' | t }}</label>
+            <div class="prop-type-badge" [style.--block-color]="selectedBlock()!.color">
+              <block-icon [name]="selectedBlock()!.icon" [size]="14"/> {{ selectedBlock()!.definitionId }}
+            </div>
+          </div>
+
+          <div class="prop-divider"></div>
+          <div class="prop-section-title">{{ 'Configuration' | t }}</div>
+
+          @for (prop of selectedBlock()!.properties; track prop.key) {
+            <div class="prop-group">
+              <label>{{ prop.label | t }}</label>
+              @if (prop.type === 'select') {
+                <select [ngModel]="prop.value" (ngModelChange)="updateBlockProperty(prop.key, $event)" class="prop-select">
+                  @for (opt of prop.options || []; track opt) { <option [value]="opt">{{ opt }}</option> }
+                </select>
+              } @else if (prop.type === 'number') {
+                <input type="number" [ngModel]="prop.value" (ngModelChange)="updateBlockProperty(prop.key, $event)" class="prop-input" />
+              } @else if (prop.type === 'textarea') {
+                <textarea [ngModel]="prop.value" (ngModelChange)="updateBlockProperty(prop.key, $event)" class="prop-textarea" rows="4" [placeholder]="prop.placeholder || ''"></textarea>
+              } @else if (prop.type === 'boolean') {
+                <label class="prop-checkbox">
+                  <input type="checkbox" [ngModel]="prop.value" (ngModelChange)="updateBlockProperty(prop.key, $event)" />
+                  <span>{{ (prop.value ? 'Enabled' : 'Disabled') | t }}</span>
+                </label>
+              } @else {
+                <input type="text" [ngModel]="prop.value" (ngModelChange)="updateBlockProperty(prop.key, $event)" class="prop-input" [placeholder]="prop.placeholder || ''" />
+              }
+            </div>
+          }
+
+          <div class="prop-divider"></div>
+          <div class="prop-actions">
+            <button class="btn-prop-action" (click)="duplicateBlock(selectedBlock()!)">{{ 'Duplicate' | t }}</button>
+            <button class="btn-prop-action btn-prop-danger" (click)="deleteBlock(selectedBlock()!.id)">{{ 'Delete' | t }}</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>
