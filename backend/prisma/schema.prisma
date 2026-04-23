@@ -1,0 +1,96 @@
+// Flowlet Prisma schema
+// Compatible with PostgreSQL (local via Docker or Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  flows        Flow[]
+  executions   Execution[]
+  credentials  Credential[]
+}
+
+model Credential {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  appType   String
+  fields    Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Flow {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  description    String      @default("")
+  blocks         Json        @default("[]")
+  connections    Json        @default("[]")
+  status         FlowStatus  @default(draft)
+  executionCount Int         @default(0)
+  webhookToken   String?     @unique
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  executions     Execution[]
+
+  @@index([userId])
+}
+
+model Execution {
+  id             String          @id @default(cuid())
+  flowId         String
+  flow           Flow            @relation(fields: [flowId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flowName       String
+  status         ExecutionStatus
+  startedAt      DateTime        @default(now())
+  completedAt    DateTime?
+  duration       Int             @default(0)
+  stepsCompleted Int             @default(0)
+  totalSteps     Int             @default(0)
+  error          String?
+  logs           Json            @default("[]")
+  triggeredBy    TriggerSource   @default(manual)
+
+  @@index([flowId])
+  @@index([userId])
+  @@index([startedAt])
+}
+
+enum FlowStatus {
+  active
+  inactive
+  draft
+}
+
+enum ExecutionStatus {
+  running
+  success
+  failed
+}
+
+enum TriggerSource {
+  manual
+  webhook
+  schedule
+  retry
+}

@@ -1,0 +1,442 @@
+<div class="page-container" (click)="closeMenus()">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Dashboard</h1>
+      <p>Bem-vindo de volta</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-secondary" (click)="openImportModal()" title="Ou cole com Ctrl+V">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M.5 9.9a.5.5 0 01.5.5v2.5a1 1 0 001 1h12a1 1 0 001-1v-2.5a.5.5 0 011 0v2.5a2 2 0 01-2 2H2a2 2 0 01-2-2v-2.5a.5.5 0 01.5-.5z"/><path d="M7.646 11.854a.5.5 0 00.708 0l3-3a.5.5 0 00-.708-.708L8.5 10.293V1.5a.5.5 0 00-1 0v8.793L5.354 8.146a.5.5 0 10-.708.708l3 3z"/></svg>
+        Import JSON
+        <kbd class="kbd-hint">Ctrl+V</kbd>
+      </button>
+      <button class="btn-create" (click)="createBlankFlow()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a1 1 0 011 1v4h4a1 1 0 110 2H9v4a1 1 0 11-2 0V9H3a1 1 0 010-2h4V3a1 1 0 011-1z"/></svg>
+        Novo Fluxo
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-pill">
+      <div class="stat-dot dot-blue"></div>
+      <span class="stat-pill-value">{{ stats().totalFlows }}</span>
+      <span class="stat-pill-label">Fluxos</span>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-dot dot-green"></div>
+      <span class="stat-pill-value">{{ stats().activeFlows }}</span>
+      <span class="stat-pill-label">Ativos</span>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-dot dot-purple"></div>
+      <span class="stat-pill-value">{{ stats().totalExecutions }}</span>
+      <span class="stat-pill-label">Execuções</span>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-dot dot-amber"></div>
+      <span class="stat-pill-value">{{ stats().successRate }}%</span>
+      <span class="stat-pill-label">Sucesso</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.active]="activeTab() === 'flows'" (click)="activeTab.set('flows')">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+      Fluxos
+      <span class="tab-count">{{ flows().length }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'executions'" (click)="activeTab.set('executions')">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/></svg>
+      Execuções
+      <span class="tab-count">{{ executions().length }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'templates'" (click)="activeTab.set('templates')">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"/></svg>
+      Templates
+    </button>
+  </div>
+
+  <!-- ========== TAB: FLUXOS ========== -->
+  @if (activeTab() === 'flows') {
+    <div class="tab-content">
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>
+            <input
+              class="search-input"
+              type="text"
+              placeholder="Pesquisar fluxos..."
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+            />
+            @if (searchQuery()) {
+              <button class="search-clear" (click)="searchQuery.set('')">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="currentColor"><path d="M4.05 3.05a.75.75 0 00-1.06 1.06L5.94 7l-2.95 2.89a.75.75 0 101.06 1.06L7 8.06l2.89 2.89a.75.75 0 101.06-1.06L8.06 7l2.89-2.89a.75.75 0 00-1.06-1.06L7 5.94 4.05 3.05z"/></svg>
+              </button>
+            }
+          </div>
+
+          <div class="filter-wrapper">
+            <button class="btn-filter" (click)="showFilterMenu.set(!showFilterMenu()); $event.stopPropagation()">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V17a1 1 0 01-.553.894l-4 2A1 1 0 017 19v-8.586L3.293 6.707A1 1 0 013 6V3z"/></svg>
+              Ordenar
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+            </button>
+            @if (showFilterMenu()) {
+              <div class="filter-menu" (click)="$event.stopPropagation()">
+                @for (opt of sortOptions; track opt.value) {
+                  <button
+                    class="filter-option"
+                    [class.selected]="sortOrder() === opt.value"
+                    (click)="setSortOrder(opt.value)"
+                  >
+                    @if (sortOrder() === opt.value) {
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                    } @else {
+                      <span class="filter-dot"></span>
+                    }
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <button class="btn-new-folder" (click)="startCreateFolder(); $event.stopPropagation()">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+          Nova Pasta
+        </button>
+      </div>
+
+      <!-- New folder input -->
+      @if (creatingFolder()) {
+        <div class="new-folder-row" (click)="$event.stopPropagation()">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" style="color: var(--text-tertiary); flex-shrink:0"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+          <input
+            class="new-folder-input"
+            type="text"
+            [ngModel]="newFolderName()"
+            (ngModelChange)="newFolderName.set($event)"
+            (keydown.enter)="confirmCreateFolder()"
+            (keydown.escape)="cancelCreateFolder()"
+            (blur)="confirmCreateFolder()"
+            placeholder="Nome da pasta"
+          />
+          <button class="btn-icon-sm" (mousedown)="confirmCreateFolder()">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+          </button>
+          <button class="btn-icon-sm danger" (mousedown)="cancelCreateFolder()">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor"><path d="M4.05 3.05a.75.75 0 00-1.06 1.06L5.94 7l-2.95 2.89a.75.75 0 101.06 1.06L7 8.06l2.89 2.89a.75.75 0 101.06-1.06L8.06 7l2.89-2.89a.75.75 0 00-1.06-1.06L7 5.94 4.05 3.05z"/></svg>
+          </button>
+        </div>
+      }
+
+      <!-- Folders -->
+      @for (folder of folders(); track folder.id) {
+        <div
+          class="folder-block"
+          [class.drag-over]="dragOverFolderId() === folder.id"
+          (dragover)="onFolderDragOver($event, folder.id)"
+          (dragleave)="onFolderDragLeave($event)"
+          (drop)="onFolderDrop($event, folder.id)"
+        >
+          <div class="folder-header" (click)="toggleFolderCollapse(folder.id)">
+            <div class="folder-header-left">
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" class="folder-icon"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+
+              @if (editingFolderId() === folder.id) {
+                <input
+                  class="folder-name-input"
+                  type="text"
+                  [attr.data-folder-input]="folder.id"
+                  [ngModel]="editingFolderName()"
+                  (ngModelChange)="editingFolderName.set($event)"
+                  (keydown.enter)="confirmRenameFolder(folder.id)"
+                  (keydown.escape)="editingFolderId.set(null)"
+                  (blur)="confirmRenameFolder(folder.id)"
+                  (click)="$event.stopPropagation()"
+                />
+              } @else {
+                <span class="folder-name">{{ folder.name }}</span>
+              }
+
+              <span class="folder-count">{{ getFlowsInFolder(folder.id).length }}</span>
+            </div>
+            <div class="folder-header-right">
+              <div class="menu-wrapper" (click)="$event.stopPropagation()">
+                <button class="btn-icon-xs" (click)="toggleFolderMenu(folder.id, $event)">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/></svg>
+                </button>
+                @if (showFolderMenu() === folder.id) {
+                  <div class="dropdown-menu">
+                    <button (click)="startRenameFolder(folder, $event)">
+                      <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+                      Renomear
+                    </button>
+                    <div class="menu-divider"></div>
+                    <button class="menu-danger" (click)="deleteFolder(folder.id, $event)">
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 010-2H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1z"/></svg>
+                      Excluir pasta
+                    </button>
+                  </div>
+                }
+              </div>
+              <svg
+                class="folder-chevron"
+                [class.open]="!folder.collapsed"
+                width="14" height="14" viewBox="0 0 20 20" fill="currentColor"
+              ><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+            </div>
+          </div>
+
+          @if (!folder.collapsed) {
+            <div class="folder-flows">
+              @if (getFlowsInFolder(folder.id).length === 0) {
+                <div class="folder-empty">Arraste fluxos para cá</div>
+              }
+              @for (flow of getFlowsInFolder(folder.id); track flow.id) {
+                <ng-container *ngTemplateOutlet="flowItem; context: { $implicit: flow }"></ng-container>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Ungrouped flows -->
+      <div
+        class="ungrouped-section"
+        [class.drag-over]="dragOverUngrouped()"
+        [class.has-folders]="folders().length > 0"
+        (dragover)="onUngroupedDragOver($event)"
+        (dragleave)="onUngroupedDragLeave($event)"
+        (drop)="onFolderDrop($event, null)"
+      >
+        @if (folders().length > 0 && ungroupedFlows().length > 0) {
+          <div class="ungrouped-label">Sem pasta</div>
+        }
+
+        @if (flows().length === 0) {
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 20 20" fill="currentColor" style="color: var(--text-tertiary); opacity:0.4"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg>
+            <p>Nenhum fluxo ainda.</p>
+            <button class="btn-create" (click)="createBlankFlow()">Criar primeiro fluxo</button>
+          </div>
+        } @else if (filteredFlows().length === 0) {
+          <div class="empty-state">
+            <p>Nenhum fluxo encontrado para "{{ searchQuery() }}"</p>
+          </div>
+        }
+
+        @for (flow of ungroupedFlows(); track flow.id) {
+          <ng-container *ngTemplateOutlet="flowItem; context: { $implicit: flow }"></ng-container>
+        }
+      </div>
+
+    </div>
+  }
+
+  <!-- ========== TAB: EXECUÇÕES ========== -->
+  @if (activeTab() === 'executions') {
+    <div class="tab-content">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <svg class="search-icon" width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>
+            <input
+              class="search-input"
+              type="text"
+              placeholder="Pesquisar por nome do fluxo..."
+              [ngModel]="execSearch()"
+              (ngModelChange)="execSearch.set($event)"
+            />
+          </div>
+
+          @if (execFlowFilter()) {
+            <div class="filter-active-chip">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V17a1 1 0 01-.553.894l-4 2A1 1 0 017 19v-8.586L3.293 6.707A1 1 0 013 6V3z"/></svg>
+              {{ execFlowFilter()!.name }}
+              <button class="filter-chip-clear" (click)="clearExecFlowFilter()">
+                <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor"><path d="M4.05 3.05a.75.75 0 00-1.06 1.06L5.94 7l-2.95 2.89a.75.75 0 101.06 1.06L7 8.06l2.89 2.89a.75.75 0 101.06-1.06L8.06 7l2.89-2.89a.75.75 0 00-1.06-1.06L7 5.94 4.05 3.05z"/></svg>
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (filteredExecutions().length === 0) {
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 20 20" fill="currentColor" style="color: var(--text-tertiary); opacity:0.4"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/></svg>
+          @if (execFlowFilter()) {
+            <p>Nenhuma execução para <strong>{{ execFlowFilter()!.name }}</strong></p>
+          } @else {
+            <p>Nenhuma execução ainda. Execute um fluxo para ver o histórico aqui.</p>
+          }
+        </div>
+      }
+
+      <div class="exec-table">
+        @for (exec of filteredExecutions(); track exec.id) {
+          <div class="exec-row" (click)="openExecution(exec)">
+            <div class="exec-status-col">
+              <div class="exec-dot" [class]="getStatusClass(exec.status)"></div>
+            </div>
+            <div class="exec-main">
+              <span class="exec-flow-name">{{ exec.flowName }}</span>
+              <span class="exec-time">{{ formatDate(exec.startedAt) }}</span>
+            </div>
+            <div class="exec-right">
+              <span class="exec-badge" [class]="getStatusClass(exec.status)">
+                {{ exec.status === 'success' ? 'Sucesso' : exec.status === 'failed' ? 'Falhou' : 'Rodando' }}
+              </span>
+              <span class="exec-duration">{{ formatDuration(exec.duration) }}</span>
+              <span class="exec-steps">{{ exec.stepsCompleted }}/{{ exec.totalSteps }} steps</span>
+              <div class="exec-open-hint">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ========== TAB: TEMPLATES ========== -->
+  @if (activeTab() === 'templates') {
+    <div class="tab-content">
+      <div class="templates-grid">
+        @for (tpl of templates; track tpl.id) {
+          <button class="template-card" (click)="createFromTemplate(tpl)">
+            <div class="template-icon-wrap">
+              <block-icon [name]="tpl.icon" [size]="26"/>
+            </div>
+            <div class="template-info">
+              <span class="template-name">{{ tpl.name }}</span>
+              <span class="template-desc">{{ tpl.description }}</span>
+            </div>
+            <svg class="template-arrow" width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Import JSON Modal -->
+  @if (showImportModal()) {
+    <div class="modal-backdrop" (click)="showImportModal.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Importar Fluxo via JSON</h2>
+          <button class="btn-close" (click)="showImportModal.set(false)">
+            <svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor"><path d="M4.05 3.05a.75.75 0 00-1.06 1.06L5.94 7l-2.95 2.89a.75.75 0 101.06 1.06L7 8.06l2.89 2.89a.75.75 0 101.06-1.06L8.06 7l2.89-2.89a.75.75 0 00-1.06-1.06L7 5.94 4.05 3.05z"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">Cole o JSON do fluxo abaixo. Você pode obtê-lo clicando em <strong>Export JSON</strong> dentro do editor.</p>
+          @if (importError()) { <div class="modal-error">{{ importError() }}</div> }
+          <textarea
+            class="json-textarea"
+            [ngModel]="importJson()"
+            (ngModelChange)="importJson.set($event)"
+            placeholder='{ "name": "Meu Fluxo", "blocks": [...], "connections": [...] }'
+            rows="10"
+            spellcheck="false"
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="showImportModal.set(false)">Cancelar</button>
+          <button class="btn-create" (click)="importFromJson()" [disabled]="importing() || !importJson().trim()">
+            @if (importing()) { <span class="spinner-xs"></span> Importando... }
+            @else { Importar Fluxo }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- Execution detail drawer -->
+@if (selectedExecution()) {
+  <app-execution-detail
+    [execution]="selectedExecution()!"
+    (closed)="closeExecution()"
+  />
+}
+
+<!-- Flow item template -->
+<ng-template #flowItem let-flow>
+  <div
+    class="flow-item"
+    draggable="true"
+    (dragstart)="onFlowDragStart($event, flow.id)"
+    (dragend)="onFlowDragEnd()"
+    (click)="selectFlow(flow.id, $event)"
+    (dblclick)="openFlow(flow.id)"
+    [class.dragging]="draggingFlowId() === flow.id"
+    [class.selected]="selectedFlowId() === flow.id"
+  >
+    <div class="flow-left">
+      <div class="flow-color-bar" [style.background]="flow.blocks[0]?.color || '#4f46e5'"></div>
+      <div class="flow-info">
+        <div class="flow-name-row">
+          <span class="flow-name">{{ flow.name }}</span>
+          <span class="flow-badge" [class]="getStatusClass(flow.status)">{{ flow.status }}</span>
+        </div>
+        <div class="flow-meta">
+          <span>{{ flow.blocks.length }} blocos</span>
+          <span>{{ flow.executionCount }} execuções</span>
+          <span>{{ formatDate(flow.updatedAt) }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="flow-actions" (click)="$event.stopPropagation()">
+      <button class="btn-executions-count" (click)="viewFlowExecutions(flow, $event)" title="Ver execuções deste fluxo">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/></svg>
+        {{ flow.executionCount }}
+      </button>
+      <button
+        class="btn-toggle"
+        [class.active]="flow.status === 'active'"
+        (click)="toggleFlowStatus(flow, $event)"
+        [title]="flow.status === 'active' ? 'Desativar' : 'Ativar'"
+      >
+        <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      </button>
+      <div class="menu-wrapper">
+        <button class="btn-menu" (click)="toggleMenu(flow.id, $event)">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M3 8a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm5 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"/></svg>
+        </button>
+        @if (showFlowMenu() === flow.id) {
+          <div class="dropdown-menu">
+            <button (click)="openFlow(flow.id)">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+              Editar
+            </button>
+            <button (click)="duplicateFlow(flow, $event)">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V2zm2 8a2 2 0 00-2 2v2a2 2 0 002 2h6a2 2 0 002-2v-2a2 2 0 00-2-2H6z"/></svg>
+              Duplicar
+            </button>
+            <button (click)="copyFlowJson(flow, $event)">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+              Copiar JSON
+            </button>
+            <div class="menu-divider"></div>
+            <button class="menu-danger" (click)="deleteFlow(flow, $event)">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 010-2H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1z"/></svg>
+              Excluir
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</ng-template>

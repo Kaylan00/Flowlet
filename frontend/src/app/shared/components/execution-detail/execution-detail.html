@@ -1,0 +1,226 @@
+@if (!inline()) {
+<!-- ===== OVERLAY MODE (dashboard) ===== -->
+<div class="exec-detail-overlay" (click)="close()">
+  <div class="exec-detail-panel" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="detail-header">
+      <div class="detail-header-left">
+        <div class="exec-status-icon" [class]="'si-' + execution().status">
+          @if (execution().status === 'success') {
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+          } @else if (execution().status === 'failed') {
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" class="spin"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/></svg>
+          }
+        </div>
+        <div class="detail-title-block">
+          <h2>{{ execution().flowName }}</h2>
+          <div class="detail-meta">
+            <span>{{ formatDate(execution().startedAt) }}</span>
+            <span class="meta-sep">·</span>
+            <span>{{ formatDuration(execution().duration) }}</span>
+            <span class="meta-sep">·</span>
+            <span>{{ execution().stepsCompleted }}/{{ execution().totalSteps }} blocos</span>
+            @if (execution().error) {
+              <span class="meta-sep">·</span>
+              <span class="meta-error">{{ execution().error }}</span>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="detail-header-right">
+        <div class="zoom-controls">
+          <button class="zoom-btn" (click)="zoomOut()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M4 8a.75.75 0 01.75-.75h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 014 8z"/></svg>
+          </button>
+          <button class="zoom-label" (click)="zoomFit()">{{ (zoom() * 100).toFixed(0) }}%</button>
+          <button class="zoom-btn" (click)="zoomIn()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/></svg>
+          </button>
+        </div>
+        <button class="btn-close-detail" (click)="close()">
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="currentColor"><path d="M4.05 3.05a.75.75 0 00-1.06 1.06L5.94 7l-2.95 2.89a.75.75 0 101.06 1.06L7 8.06l2.89 2.89a.75.75 0 101.06-1.06L8.06 7l2.89-2.89a.75.75 0 00-1.06-1.06L7 5.94 4.05 3.05z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <ng-container *ngTemplateOutlet="bodyContent"/>
+    </div>
+  </div>
+</div>
+}
+
+@if (inline()) {
+<!-- ===== INLINE MODE (flow editor) ===== -->
+<div class="detail-body detail-body-inline">
+  <ng-container *ngTemplateOutlet="bodyContent"/>
+</div>
+}
+
+<!-- Shared body template -->
+<ng-template #bodyContent>
+  @if (loadingDetail()) {
+    <div class="loading-state">
+      <div class="spinner-lg"></div>
+      <span>Carregando execução...</span>
+    </div>
+  } @else {
+
+    <!-- Canvas area -->
+    <div class="canvas-area" (wheel)="onWheel($event)">
+      @if (!flow()) {
+        <div class="no-flow-state">
+          <p>Fluxo não encontrado — pode ter sido excluído.</p>
+          <p class="no-flow-sub">O log abaixo ainda mostra o que foi executado.</p>
+        </div>
+      }
+
+      @if (flow() && nodeStatuses().length > 0) {
+        <div
+          class="canvas-inner"
+          [style.transform]="'scale(' + zoom() + ') translate(' + panX() + 'px,' + panY() + 'px)'"
+          [style.width.px]="canvasWidth()"
+          [style.height.px]="canvasHeight()"
+        >
+          <!-- Connections -->
+          <svg class="connections-svg" [attr.width]="canvasWidth()" [attr.height]="canvasHeight()">
+            @for (conn of connections(); track conn.id) {
+              <path
+                [attr.d]="getConnectionPath(conn.sourceId, conn.targetId)"
+                class="conn-path"
+                [class]="'conn-' + getConnStatus(conn.sourceId, conn.targetId)"
+              />
+            }
+          </svg>
+
+          <!-- Nodes -->
+          @for (node of nodeStatuses(); track node.blockId) {
+            <div
+              class="exec-node"
+              [class]="'node-' + node.status"
+              [class.node-selected]="selectedNodeId() === node.blockId"
+              [style.left.px]="node.posX"
+              [style.top.px]="node.posY"
+              [style.--node-color]="node.color"
+              (click)="selectNode(node)"
+            >
+              <div class="node-color-bar"></div>
+              <div class="node-body">
+                <div class="node-icon-wrap">
+                  <block-icon [name]="node.icon" [size]="16"/>
+                </div>
+                <div class="node-info">
+                  <span class="node-label">{{ node.label }}</span>
+                  @if (node.log) {
+                    <span class="node-duration">{{ formatDuration(node.log.duration) }}</span>
+                  }
+                </div>
+                <div class="node-status-badge" [class]="'nsb-' + node.status">
+                  @if (node.status === 'success') {
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>
+                  } @else if (node.status === 'failed') {
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z"/></svg>
+                  } @else if (node.status === 'skipped') {
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M7.75 11.5a.75.75 0 01-.75-.75v-5.5a.75.75 0 011.5 0v5.5a.75.75 0 01-.75.75zm3-1a.75.75 0 01-.75-.75v-3.5a.75.75 0 011.5 0v3.5a.75.75 0 01-.75.75z"/></svg>
+                  } @else if (node.status === 'pending') {
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 1a7 7 0 100 14A7 7 0 008 1zM0 8a8 8 0 1116 0A8 8 0 010 8z"/></svg>
+                  }
+                </div>
+              </div>
+              <div class="node-port port-in"></div>
+              <div class="node-port port-out"></div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Log detail panel -->
+    <div class="log-panel" [class.log-panel-open]="selectedLog()">
+
+      @if (!selectedLog()) {
+        <!-- Step timeline (always visible when no node selected) -->
+        <div class="timeline-header">
+          <span>Steps</span>
+          <span class="timeline-count">{{ (fullExecution() ?? execution()).logs.length }}</span>
+        </div>
+        <div class="timeline-list">
+          @for (log of (fullExecution() ?? execution()).logs; track log.blockId; let i = $index; let last = $last) {
+            <div
+              class="timeline-item"
+              [class]="'tl-' + log.status"
+              (click)="selectedLog.set(log); selectedNodeId.set(log.blockId)"
+            >
+              <div class="tl-connector">
+                <div class="tl-dot" [class]="'dot-' + log.status"></div>
+                @if (!last) { <div class="tl-line"></div> }
+              </div>
+              <div class="tl-content">
+                <div class="tl-top">
+                  <span class="tl-step">{{ i + 1 }}</span>
+                  <span class="tl-label">{{ log.blockLabel }}</span>
+                  <span class="tl-badge" [class]="'badge-' + log.status">
+                    {{ log.status === 'success' ? 'OK' : log.status === 'failed' ? 'Erro' : log.status === 'skipped' ? 'Skip' : 'Run' }}
+                  </span>
+                  <span class="tl-dur">{{ formatDuration(log.duration) }}</span>
+                </div>
+                <div class="tl-msg">{{ log.message }}</div>
+              </div>
+            </div>
+          }
+          @if ((fullExecution() ?? execution()).logs.length === 0) {
+            <div class="timeline-empty">Nenhum log disponível</div>
+          }
+        </div>
+      }
+
+      @if (selectedLog(); as log) {
+        <!-- Node detail -->
+        <div class="node-detail">
+          <div class="nd-header">
+            <button class="nd-back" (click)="selectedLog.set(null); selectedNodeId.set(null)">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L4.414 8l5.293 5.293a1 1 0 010 1.414z"/></svg>
+            </button>
+            <span class="nd-title">{{ log.blockLabel }}</span>
+            <span class="nd-badge" [class]="'badge-' + log.status">
+              {{ log.status === 'success' ? 'Sucesso' : log.status === 'failed' ? 'Falhou' : log.status === 'skipped' ? 'Pulado' : 'Rodando' }}
+            </span>
+          </div>
+
+          <div class="nd-body">
+            <div class="nd-meta-row">
+              <div class="nd-meta-item">
+                <span class="nd-meta-label">Duração</span>
+                <span class="nd-meta-value">{{ formatDuration(log.duration) }}</span>
+              </div>
+              <div class="nd-meta-item">
+                <span class="nd-meta-label">Horário</span>
+                <span class="nd-meta-value">{{ formatDate(log.timestamp) }}</span>
+              </div>
+              <div class="nd-meta-item">
+                <span class="nd-meta-label">Categoria</span>
+                <span class="nd-meta-value">{{ log.blockCategory }}</span>
+              </div>
+            </div>
+
+            <div class="nd-section">
+              <div class="nd-section-title">Mensagem</div>
+              <div class="nd-message" [class.nd-message-error]="log.status === 'failed'">{{ log.message }}</div>
+            </div>
+
+            @if (log.output) {
+              <div class="nd-section">
+                <div class="nd-section-title">Output</div>
+                <pre class="nd-output">{{ formatOutput(log.output) }}</pre>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+  }
+</ng-template>

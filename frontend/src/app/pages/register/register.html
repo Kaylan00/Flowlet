@@ -1,0 +1,102 @@
+<div class="login-page">
+  <div class="login-left">
+    <div class="login-branding">
+      <div class="brand-logo">
+        <svg width="40" height="40" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="8" fill="#4f46e5"/>
+          <path d="M8 10h4v2H8v-2zm0 6h4v2H8v-2zm8-6h4v2h-4v-2zm0 6h4v2h-4v-2zm-4 0h4v-6h-4v6z" fill="white" opacity="0.9"/>
+        </svg>
+      </div>
+      <h1>Flowlet</h1>
+      <p>{{ 'Visual automation made simple' | t }}</p>
+    </div>
+
+    <div class="login-features">
+      <div class="feature">
+        <div>
+          <strong>{{ 'Create an account' | t }}</strong>
+          <span>{{ 'Start building flows in seconds' | t }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="login-right">
+    <div class="login-card">
+      <div class="login-header">
+        <h2>{{ 'Create account' | t }}</h2>
+        <p>{{ 'Start automating your workflows today' | t }}</p>
+      </div>
+
+      @if (error()) {
+        <div class="login-error">{{ error() }}</div>
+      }
+
+      <form (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-group">
+          <label for="name">{{ 'Name' | t }}</label>
+          <input
+            id="name"
+            type="text"
+            placeholder="Your name"
+            [ngModel]="name()"
+            (ngModelChange)="name.set($event)"
+            name="name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="email">{{ 'Email' | t }}</label>
+          <input
+            id="email"
+            type="email"
+            placeholder="you@company.com"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            name="email"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">{{ 'Password' | t }}</label>
+          <input
+            id="password"
+            type="password"
+            placeholder="At least 6 characters"
+            [ngModel]="password()"
+            (ngModelChange)="password.set($event)"
+            name="password"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="confirm">{{ 'Confirm password' | t }}</label>
+          <input
+            id="confirm"
+            type="password"
+            placeholder="Repeat your password"
+            [ngModel]="confirmPassword()"
+            (ngModelChange)="confirmPassword.set($event)"
+            name="confirm"
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-login" [disabled]="loading()">
+          @if (loading()) {
+            <span class="spinner"></span>
+            {{ 'Creating...' | t }}
+          } @else {
+            {{ 'Create account' | t }}
+          }
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p>{{ 'Already have an account?' | t }} <a [routerLink]="['/login']">{{ 'Sign in' | t }}</a></p>
+      </div>
+    </div>
+  </div>
+</div>
