@@ -2,7 +2,44 @@
 
 > Plataforma de automação visual — conecte apps, APIs e serviços por meio de fluxos drag-and-drop sem escrever código.
 
-Flowlet é uma ferramenta no estilo n8n/Zapier construída do zero com **Angular 21** no front-end e **Fastify + Prisma** no back-end. Você monta fluxos encadeando blocos visuais, dispara execuções via webhook, agendamento ou manualmente, e acompanha o log completo de cada passo em tempo real.
+Flowlet é uma ferramenta no estilo n8n/Zapier construída do zero. Você monta fluxos encadeando blocos visuais, dispara execuções via webhook, agendamento ou manualmente, e acompanha o log completo de cada passo em tempo real.
+
+---
+
+## Tecnologias
+
+### Front-end
+![Angular](https://img.shields.io/badge/Angular_21-DD0031?style=flat&logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript_5.9-3178C6?style=flat&logo=typescript&logoColor=white)
+![RxJS](https://img.shields.io/badge/RxJS_7-B7178C?style=flat&logo=reactivex&logoColor=white)
+![SCSS](https://img.shields.io/badge/SCSS-CC6699?style=flat&logo=sass&logoColor=white)
+
+| Lib | Versão | Uso |
+|---|---|---|
+| Angular | 21 | Framework principal, standalone components, Signals |
+| Angular CDK | 21 | Primitivos de acessibilidade e drag-and-drop |
+| RxJS | 7 | Streams reativos |
+| SCSS | — | Estilos com variáveis e mixins centralizados |
+| esbuild | — | Build otimizado via `@angular/build` |
+
+### Back-end
+![Fastify](https://img.shields.io/badge/Fastify_5-000000?style=flat&logo=fastify&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js_20-339933?style=flat&logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript_5.9-3178C6?style=flat&logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma_6-2D3748?style=flat&logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL_16-336791?style=flat&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white)
+
+| Lib | Versão | Uso |
+|---|---|---|
+| Fastify | 5 | Framework HTTP de alta performance |
+| Prisma | 6 | ORM type-safe com migrations |
+| PostgreSQL | 16 | Banco de dados relacional |
+| Zod | 3 | Validação de schemas em runtime |
+| Argon2 | — | Hash seguro de senhas |
+| @fastify/jwt | — | Autenticação JWT |
+| node-cron | 3 | Agendamento de fluxos |
+| Docker Compose | — | Postgres local em um comando |
 
 ---
 
@@ -22,29 +59,6 @@ Flowlet é uma ferramenta no estilo n8n/Zapier construída do zero com **Angular
 | **Auth JWT** | Registro/login com Argon2 + JWT (7 dias) |
 | **Tema claro/escuro** | Alternância de tema persistida |
 | **i18n** | Internacionalização via script de tradução automatizado (Google Translate) |
-
----
-
-## Stack
-
-### Front-end (`/frontend`)
-
-- **Angular 21** com standalone components e Signals
-- **Angular CDK** para primitivos de acessibilidade e drag-and-drop
-- **RxJS 7** para streams reativos
-- **SCSS** com variáveis e mixins centralizados
-- Build otimizado com `@angular/build` (esbuild)
-
-### Back-end (`/backend`)
-
-- **Fastify 5** — framework HTTP de alta performance
-- **Prisma 6** — ORM type-safe com migrations
-- **PostgreSQL 16** — banco de dados relacional
-- **Zod** — validação de schemas em runtime
-- **Argon2** — hash de senhas
-- **@fastify/jwt** — autenticação JWT
-- **node-cron** — agendamento de fluxos
-- **Docker Compose** — Postgres local em um comando
 
 ---
 
