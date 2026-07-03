@@ -51,7 +51,15 @@ export async function buildServer() {
     return reply.code(500).send({ error: 'Internal server error' });
   });
 
-  app.get('/api/health', async () => ({ status: 'ok', now: new Date().toISOString() }));
+  app.get('/api/health', async (_req, reply) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      return { status: 'ok', database: 'up', now: new Date().toISOString() };
+    } catch (err) {
+      app.log.error(err, 'health check: database unreachable');
+      return reply.code(503).send({ status: 'degraded', database: 'down', now: new Date().toISOString() });
+    }
+  });
 
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(flowsRoutes, { prefix: '/api/flows' });
@@ -83,4 +91,7 @@ async function main() {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
-main();
+const isEntryPoint = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+if (isEntryPoint) {
+  main();
+}

@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { createCredentialSchema, updateCredentialSchema } from './credentials.schemas.js';
 import { credentialsService } from './credentials.service.js';
@@ -23,11 +23,14 @@ export async function credentialsRoutes(app: FastifyInstance) {
     return credentialsService.get(req.userId, id);
   });
 
-  app.put('/:id', async (req) => {
+  const updateHandler = async (req: FastifyRequest) => {
     const { id } = idParam.parse(req.params);
     const input = updateCredentialSchema.parse(req.body);
     return credentialsService.update(req.userId, id, input);
-  });
+  };
+
+  app.put('/:id', updateHandler);
+  app.patch('/:id', updateHandler);
 
   app.delete('/:id', async (req, reply) => {
     const { id } = idParam.parse(req.params);

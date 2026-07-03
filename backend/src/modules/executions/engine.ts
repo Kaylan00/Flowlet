@@ -1,6 +1,7 @@
 import type { EngineLogger } from '../../lib/logger.js';
 import type { FlowBlockInput, FlowConnectionInput } from '../flows/flows.schemas.js';
 import { runBlock } from './blocks/index.js';
+import { FilterStopError } from './filter-stop.js';
 
 export type BlockCategory = 'trigger' | 'logic' | 'action' | 'output';
 
@@ -99,12 +100,13 @@ export async function executeFlow(
       });
       stepsCompleted++;
     } catch (err) {
+      const isFilterStop = err instanceof FilterStopError;
       const message = err instanceof Error ? err.message : String(err);
       ctx.logs.push({
         blockId: block.id,
         blockLabel: block.label,
         blockCategory: block.category,
-        status: 'failed',
+        status: isFilterStop ? 'skipped' : 'failed',
         message,
         timestamp: new Date().toISOString(),
         duration: Date.now() - start,
@@ -115,13 +117,17 @@ export async function executeFlow(
           blockLabel: rest.label,
           blockCategory: rest.category,
           status: 'skipped',
-          message: 'Skipped due to previous failure',
+          message: isFilterStop ? 'Skipped: flow stopped by filter' : 'Skipped due to previous failure',
           timestamp: new Date().toISOString(),
           duration: 0,
         });
       }
-      status = 'failed';
-      lastError = message;
+      if (isFilterStop) {
+        stepsCompleted++;
+      } else {
+        status = 'failed';
+        lastError = message;
+      }
       break;
     }
   }

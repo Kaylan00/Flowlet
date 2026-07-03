@@ -1,6 +1,6 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { z } from 'zod';
-import { createFlowSchema, updateFlowSchema } from './flows.schemas.js';
+import { createFlowSchema, listFlowsQuerySchema, updateFlowSchema } from './flows.schemas.js';
 import { flowsService } from './flows.service.js';
 import { runFlowSchema, executionsService } from '../executions/executions.service.js';
 
@@ -10,7 +10,8 @@ export async function flowsRoutes(app: FastifyInstance) {
   app.addHook('onRequest', app.authenticate);
 
   app.get('/', async (req) => {
-    return flowsService.list(req.userId);
+    const query = listFlowsQuerySchema.parse(req.query);
+    return flowsService.list(req.userId, query);
   });
 
   app.post('/', async (req, reply) => {
@@ -24,11 +25,14 @@ export async function flowsRoutes(app: FastifyInstance) {
     return flowsService.get(req.userId, id);
   });
 
-  app.put('/:id', async (req) => {
+  const updateHandler = async (req: FastifyRequest) => {
     const { id } = idParam.parse(req.params);
     const input = updateFlowSchema.parse(req.body);
     return flowsService.update(req.userId, id, input);
-  });
+  };
+
+  app.put('/:id', updateHandler);
+  app.patch('/:id', updateHandler);
 
   app.delete('/:id', async (req, reply) => {
     const { id } = idParam.parse(req.params);

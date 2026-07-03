@@ -2,15 +2,24 @@ import type { FastifyInstance } from 'fastify';
 import { registerSchema, loginSchema } from './auth.schemas.js';
 import { authService } from './auth.service.js';
 
+const bruteForceGuard = {
+  config: {
+    rateLimit: {
+      max: 10,
+      timeWindow: '1 minute',
+    },
+  },
+};
+
 export async function authRoutes(app: FastifyInstance) {
-  app.post('/register', async (req, reply) => {
+  app.post('/register', bruteForceGuard, async (req, reply) => {
     const input = registerSchema.parse(req.body);
     const user = await authService.register(input);
     const token = app.jwt.sign({ sub: user.id, email: user.email });
     return reply.code(201).send({ token, user });
   });
 
-  app.post('/login', async (req, reply) => {
+  app.post('/login', bruteForceGuard, async (req, reply) => {
     const input = loginSchema.parse(req.body);
     const user = await authService.login(input);
     const token = app.jwt.sign({ sub: user.id, email: user.email });

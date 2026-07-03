@@ -11,7 +11,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "db:seed": "tsx src/lib/seed.ts"
+    "db:seed": "tsx src/lib/seed.ts",
+    "test": "dotenv -e .env.test -- vitest run",
+    "test:watch": "dotenv -e .env.test -- vitest"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",
@@ -32,8 +34,10 @@
   "devDependencies": {
     "@types/node": "^22.10.5",
     "@types/node-cron": "^3.0.11",
+    "dotenv-cli": "^11.0.0",
     "prisma": "^6.2.1",
     "tsx": "^4.19.2",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.9"
   }
 }

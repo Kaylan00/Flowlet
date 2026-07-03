@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma.js';
 import { notFound } from '../../lib/errors.js';
-import type { CreateFlowInput, UpdateFlowInput } from './flows.schemas.js';
+import type { CreateFlowInput, FlowStatus, UpdateFlowInput } from './flows.schemas.js';
 
 function generateWebhookToken(): string {
   return randomBytes(24).toString('hex');
@@ -17,10 +17,12 @@ function serialize<T extends { blocks: Prisma.JsonValue; connections: Prisma.Jso
 }
 
 export const flowsService = {
-  async list(userId: string) {
+  async list(userId: string, params: { status?: FlowStatus; limit?: number; offset?: number } = {}) {
     const flows = await prisma.flow.findMany({
-      where: { userId },
+      where: { userId, ...(params.status ? { status: params.status } : {}) },
       orderBy: { updatedAt: 'desc' },
+      ...(params.limit ? { take: Math.min(params.limit, 200) } : {}),
+      ...(params.offset ? { skip: Math.max(params.offset, 0) } : {}),
     });
     return flows.map(serialize);
   },

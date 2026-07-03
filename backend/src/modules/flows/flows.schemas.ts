@@ -38,7 +38,15 @@ export const createFlowSchema = z.object({
 
 export const updateFlowSchema = createFlowSchema.partial();
 
+export const listFlowsQuerySchema = z.object({
+  status: flowStatusSchema.optional(),
+  limit: z.coerce.number().min(1).max(200).optional(),
+  offset: z.coerce.number().min(0).optional(),
+});
+
 export type CreateFlowInput = z.infer<typeof createFlowSchema>;
 export type UpdateFlowInput = z.infer<typeof updateFlowSchema>;
 export type FlowBlockInput = z.infer<typeof blockSchema>;
 export type FlowConnectionInput = z.infer<typeof connectionSchema>;
+export type FlowStatus = z.infer<typeof flowStatusSchema>;
+export type ListFlowsQuery = z.infer<typeof listFlowsQuerySchema>;

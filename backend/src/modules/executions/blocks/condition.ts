@@ -1,5 +1,6 @@
 import type { ExecutionContext } from '../engine.js';
 import { resolveFieldPath } from '../../../lib/templating.js';
+import { FilterStopError } from '../filter-stop.js';
 
 export function runCondition(
   props: Record<string, unknown>,
@@ -37,7 +38,7 @@ export function runCondition(
   }
 
   if (throwIfFalse && !result) {
-    throw new Error(`Filter blocked: ${field} ${operator} ${String(compare)}`);
+    throw new FilterStopError(`Filter blocked: ${field} ${operator} ${String(compare)}`);
   }
   return { conditionMet: result, field, operator, actualValue: actual };
 }

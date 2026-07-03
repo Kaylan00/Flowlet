@@ -40,6 +40,7 @@ Flowlet é uma ferramenta no estilo n8n/Zapier construída do zero. Você monta 
 | @fastify/jwt | — | Autenticação JWT |
 | node-cron | 3 | Agendamento de fluxos |
 | Docker Compose | — | Postgres local em um comando |
+| Vitest | — | Testes de integração (auth, fluxos, engine, webhooks) |
 
 ---
 
@@ -82,8 +83,11 @@ Flowlet/
 │   ├── prisma/
 │   │   ├── schema.prisma      # Modelos: User, Flow, Execution, Credential
 │   │   └── migrations/
+│   ├── tests/                 # Suíte de testes (Vitest)
 │   ├── docker-compose.yml     # Postgres local
-│   └── .env.example
+│   ├── Dockerfile             # Build de produção do backend
+│   ├── .env.example
+│   └── .env.test              # Config isolada usada pelos testes
 │
 └── frontend/
     ├── src/app/
@@ -185,18 +189,21 @@ npm start
 
 | Método | Rota | Descrição |
 |---|---|---|
-| `GET` | `/api/health` | Health check |
-| `POST` | `/api/auth/register` | Cria conta |
-| `POST` | `/api/auth/login` | Autentica e retorna JWT |
+| `GET` | `/api/health` | Health check (inclui teste de conexão com o banco) |
+| `POST` | `/api/auth/register` | Cria conta (limitado a 10 req/min por IP) |
+| `POST` | `/api/auth/login` | Autentica e retorna JWT (limitado a 10 req/min por IP) |
 | `GET` | `/api/auth/me` | Dados do usuário autenticado |
-| `GET/POST` | `/api/flows` | Lista / cria fluxos |
-| `GET/PATCH/DELETE` | `/api/flows/:id` | Detalhe / atualiza / remove fluxo |
+| `GET/POST` | `/api/flows` | Lista (com paginação `limit`/`offset` e filtro `status`) / cria fluxos |
+| `GET/PUT/PATCH/DELETE` | `/api/flows/:id` | Detalhe / atualiza / remove fluxo |
+| `POST` | `/api/flows/:id/toggle` | Alterna status ativo/inativo |
+| `POST` | `/api/flows/:id/duplicate` | Duplica um fluxo |
 | `POST` | `/api/flows/:id/run` | Executa fluxo manualmente |
-| `GET` | `/api/executions` | Lista execuções |
+| `GET` | `/api/executions` | Lista execuções (paginação `limit`/`offset`, filtro `flowId`) |
 | `GET` | `/api/executions/:id` | Detalhe de uma execução |
-| `POST` | `/api/webhooks/:token` | Dispara fluxo via webhook |
+| `POST` | `/api/executions/:id/retry` | Reexecuta uma execução anterior |
+| `GET/POST/PUT/DELETE` | `/api/webhooks/:token` | Dispara fluxo via webhook |
 | `GET/POST` | `/api/credentials` | Lista / cria credenciais |
-| `DELETE` | `/api/credentials/:id` | Remove credencial |
+| `GET/PUT/PATCH/DELETE` | `/api/credentials/:id` | Detalhe / atualiza / remove credencial |
 
 ---
 
@@ -261,6 +268,8 @@ npm run dev              # desenvolvimento com hot-reload (tsx watch)
 npm run build            # compila TypeScript para dist/
 npm run prisma:studio    # Prisma Studio (GUI do banco)
 npm run db:seed          # seed com dados de exemplo
+npm test                 # roda a suíte de testes (tests/*.test.ts) contra um banco isolado
+npm run test:watch       # testes em modo watch
 
 # Frontend
 npm start                # servidor de desenvolvimento (ng serve)
@@ -269,6 +278,35 @@ npm run translate        # traduz novas strings i18n automaticamente
 npm run translate:all    # força retradução de todas as strings
 npm run translate:dry    # simula tradução sem gravar arquivos
 ```
+
+---
+
+## Testes
+
+O backend tem uma suíte de testes de integração em `backend/tests/` cobrindo autenticação, CRUD de fluxos (com isolamento entre usuários), o motor de execução (condições, filtros, variáveis, erros) e o disparo via webhook.
+
+Os testes rodam contra um banco Postgres isolado (`flowlet_test`), configurado em `backend/.env.test`.
+
+```bash
+cd backend
+docker compose up -d                                          # sobe o Postgres local
+docker exec flowlet-postgres psql -U flowlet -d postgres -c "CREATE DATABASE flowlet_test;"
+npm test
+```
+
+As migrations são aplicadas automaticamente no banco de teste antes da suíte rodar.
+
+---
+
+## Deploy do backend com Docker
+
+```bash
+cd backend
+docker build -t flowlet-backend .
+docker run -p 3333:3333 --env-file .env flowlet-backend
+```
+
+O `Dockerfile` faz build em duas etapas (compila o TypeScript e gera o Prisma Client) e a imagem final roda só o código compilado em `dist/`.
 
 ---
 
